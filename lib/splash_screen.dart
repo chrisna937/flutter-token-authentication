@@ -1,0 +1,53 @@
+import 'package:flutter/material.dart';
+import 'package:login_with_code_frontend/home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    _checkToken();
+  }
+
+  //autologin
+  void _checkToken()  async {
+    await Future.delayed(const Duration(seconds: 2));
+  
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token != null) {
+      //Token exists, navigate to Home
+      Navigator.pushReplacement(
+        context, 
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    } else {
+      //Stay on login screen
+    }
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          children: [
+            // CircularProgressIndicator(),
+            Padding(
+              padding: const EdgeInsets.only(top: 50),
+              child: Text("Splash Screen"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
