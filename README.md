@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # login_with_code_frontend
 
 A new Flutter project.
@@ -14,3 +15,7 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+=======
+# auth-eula-system
+Flutter login system with EULA agreement flow.
+>>>>>>> fe039c5ea481145440695a4db6740f5b512463a0
