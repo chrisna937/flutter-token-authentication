@@ -39,27 +39,40 @@ class _CreateEulaScreenState extends State<CreateEulaScreen> {
 
 
   Future<void> _submitEula() async {
-    if (!_formKey.currentState!.validate()) return;
+    debugPrint("=== _submitEula() called ===");
 
+    if (!_formKey.currentState!.validate()) {
+      debugPrint("Form validation failed. Aborting submission.");
+    return;
+    }
+    
+    // debugPrint("Form validation passed.");
     setState(() => _isLoading = true);
   
   try {
-     
+    //  debugPrint("Fetching userId from AuthService...");
      final userId = await AuthService.getUserId();
-      if (userId == null) {
+     final token = await AuthService.getToken();
+    //  debugPrint("userId retrieved: $userId");
+
+      if (userId == null || token == null) {
         throw Exception("User not logged in");
       }
 
-      final now = DateTime.now().toIso8601String();
+    final now = DateTime.now().toIso8601String();
+    // debugPrint("Timestamp (now): $now");
     
      final response = await http.post(
-      Uri.parse("$baseURL/eula-version"),
-      headers: {"Content-Type": "application/json"},
+      Uri.parse("$baseURL/api/eula-version"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token"    
+        },
       body: jsonEncode({
         "version_code": _versionController.text.trim(),
         "content": _contentController.text.trim(),
         "is_active": _isActive,
-        "insertdt": now,
+        "released_at": now,
         "insertedby": userId,
         "deletedt": null,
         "deletedby": null,
@@ -68,8 +81,11 @@ class _CreateEulaScreenState extends State<CreateEulaScreen> {
         "row_delete_flag": false,
       }),
     );
+    debugPrint("Request URL: $baseURL/eula-version");
+    debugPrint("Request body: $response");
 
     if (response.statusCode == 200 || response.statusCode == 201) {
+      debugPrint("EULA submitted successfully.");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("EULA Version Published Successfully")),
       );
@@ -77,18 +93,24 @@ class _CreateEulaScreenState extends State<CreateEulaScreen> {
       _versionController.clear();
       _contentController.clear();
       setState(() => _isActive = true);
+      debugPrint("Form cleared and _isActive reset to true");
     } else {
+         debugPrint("Server returned an error. Status: ${response.statusCode}, Body: ${response.body}");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: ${response.body}")),
       );
     }
-  } catch (e) {
+  } catch (e, stackTrace) {
+    debugPrint("EXCEPTION caught in _submitEula: $e");
+    debugPrint("StackTrace: $stackTrace");
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Connection Error: $e")),
     );
-  }
+  } finally {
+    debugPrint("Setting _isLoading to false.");
 
   setState(() => _isLoading = false);
+  }
   }
   // Future<void> _submitEula() async {
   //   if (!_formKey.currentState!.validate()) return;

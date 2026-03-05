@@ -15,4 +15,9 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('email');
   }
+
+//   Future<String?> getToken() async {
+//   return await _storage.read(key: 'token');
+// }
 }
+
