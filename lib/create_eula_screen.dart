@@ -25,7 +25,7 @@ class _CreateEulaScreenState extends State<CreateEulaScreen> {
   final String baseURL = "http://192.168.100.77:3000"; 
 
 
-  //Fetch userid token & email
+  //Fetch userid & email
   Future<int?> getUserId() async {
     final id = await _storage.read(key: 'userid');
     if (id ==  null) return null;
