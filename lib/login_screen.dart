@@ -59,110 +59,48 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
   }
 
-  //with prints
-Future<void> _verifyOtp() async {
-  final email = _emailController.text.trim();
-  final otp = _otpController.text.trim();
+  Future<void> _verifyOtp() async {
+    final email = _emailController.text.trim();
+    final otp = _otpController.text.trim();
 
-  print("Starting OTP verification for email: $email, otp: $otp");
+    //  print("Starting OTP verification for email: $email, otp: $otp");
 
-  if (otp.length != 6) {
-    _showMessage("Enter valid 6-digit OTP");
-    print("OTP length invalid");
-    return;
-  }
+    if (otp.length != 6) {
+      _showMessage("Enter valid 6-digit OTP");
+      return;
+    }
 
-  setState(() => _isLoading = true);
+    setState(() => _isLoading = true);
 
-  try {
-    final response = await http.post(
-      Uri.parse('$baseURL/api/verify-otp'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"email": email, "otp": otp}),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('$baseURL/api/verify-otp'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email, "otp": otp}),
+        );
 
-    print("Server responded with status: ${response.statusCode}");
+        final data = jsonDecode(response.body);
+        print("Response: $data");
 
-    final data = jsonDecode(response.body);
-    print("Response body: $data");
+        if (response.statusCode == 200) {
 
-    if (response.statusCode == 200) {
-      final prefs = await SharedPreferences.getInstance();
-
-      // Store user info
+           final prefs = await SharedPreferences.getInstance(); 
+           // Store user info
       await prefs.setString('token', data['token']);
       await prefs.setString('userid', data['userid'].toString());
       await prefs.setString('email', data['email']);
-      print("Saved token and user info in SharedPreferences");
-
+     
       if (data['eula_required'] == true) {
-        print("EULA required for this user");
-        final eula = data['eula'];
-        print("Active EULA details: $eula");
+        final accepted = await _handleEulaAcceptance(data);
+      
+      if (accepted != true) {
 
-  //       //Convert types safely
-  //       final versionCode = eula['version_code']?.toString() ?? '';
-  //       final content = eula['content']?.toString() ?? '';
-  //       final versionId = eula['versionid'] is int
-  //           ? eula['versionid']
-  //           : int.tryParse(eula['versionid'].toString()) ?? 0;
-
-  //  print("Active EULA details after type fix: versionCode=$versionCode, content=$content, versionId=$versionId");
-
-        // Show EULA dialog
-        final accepted = await showDialog<bool>(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => EulaDialog(
-            versionCode: eula['version_code'].toString(),
-            content: eula['content'].toString(),
-            versionId: eula['versionid'] is int
-                 ? eula['versionid']
-                 : int.tryParse(eula['versionid'].toString()) ?? 0,
-            userId:data['userid'] is int
-                 ? data['userid']
-                 : int.tryParse(data['userid'].toString()) ?? 0,
-            onAccept: (userId, versionId) async {
-              // print("User accepting EULA: userId=$userId, versionId=$versionId");
-               
-     final userId = await AuthService.getUserId();
-     final token = await AuthService.getToken();
-    //  debugPrint("userId retrieved: $userId");
-
-      if (userId == null || token == null) {
-        throw Exception("User not logged in");
+        print("User did not accept EULA");
+        return;
       }
-             
-              final resp = await http.post(
-                Uri.parse("$baseURL/api/eula-acceptance"),
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": "Bearer $token"
-                          },
-              );
-              //   body: jsonEncode({
-              //     "userid": userId,
-              //     // "eula_version_id": versionId,
-              //     "accepted_at": DateTime.now().toIso8601String(),
-              //   }),
-              // );
-              print("EULA acceptance response status: ${resp.statusCode}");
-              return resp.statusCode == 200 || resp.statusCode == 201;
-            },
-          ),
-        );
-
-        if (accepted != true) {
-          print("User cancelled EULA dialog");
-          return; // User cancelled - do not proceed
-        }
-
-        print("User accepted EULA");
-      } else {
-        print("No EULA required");
       }
 
-      // Navigate to HomeScreen
+       // Navigate to HomeScreen
       print("Navigating to HomeScreen");
       Navigator.pushReplacement(
         context,
@@ -170,16 +108,177 @@ Future<void> _verifyOtp() async {
       );
     } else {
       _showMessage(data["message"] ?? "Invalid OTP");
-      print("OTP verification failed: ${data["message"]}");
     }
   } catch (e) {
-    _showMessage("Server error");
-    print("Error during OTP verification: $e");
+    print(e);
+   _showMessage("Server error"); 
   }
 
   setState(() => _isLoading = false);
-  print("OTP verification finished, loading state set to false");
-}
+  }
+
+
+  Future<bool?> _handleEulaAcceptance(dynamic data) async {
+    final eula = data['eula'];
+
+    return await showDialog<bool>(
+      context: context, 
+      barrierDismissible: false,
+      builder: (_) => EulaDialog(
+         versionCode: eula['version_code'].toString(),
+         content: eula['content'].toString(),
+        //  versionId: eula['versionid'],
+         versionId: eula['versionid'] is int
+                 ? eula['versionid']
+                 : int.tryParse(eula['versionid'].toString()) ?? 0,
+        //  userId:data['userid'],
+         userId:data['userid'] is int
+                 ? data['userid']
+                 : int.tryParse(data['userid'].toString()) ?? 0,
+        onAccept: _acceptEula,
+      ),
+    );
+  }
+
+  Future<bool> _acceptEula(int userId, int versionId) async {
+    try {
+
+       final token = await AuthService.getToken();
+
+       final resp = await http.post(
+          Uri.parse("$baseURL/api/eula-acceptance"),
+          headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token"
+          },
+      body: jsonEncode({
+            "userid": userId,
+            "eula_version_id": versionId,
+            "accepted_at": DateTime.now().toIso8601String(),
+          }),
+        );
+         print("EULA acceptance response: ${resp.statusCode}");
+       
+        return resp.statusCode == 200 || resp.statusCode == 201;
+    
+    } catch (e) {
+      print("EULA acceptance error: $e");
+      return false;
+    }
+  }
+
+//   //with prints
+// Future<void> _verifyOtp() async {
+//   final email = _emailController.text.trim();
+//   final otp = _otpController.text.trim();
+
+//   print("Starting OTP verification for email: $email, otp: $otp");
+
+//   if (otp.length != 6) {
+//     _showMessage("Enter valid 6-digit OTP");
+//     print("OTP length invalid");
+//     return;
+//   }
+
+//   setState(() => _isLoading = true);
+
+//   try {
+//     final response = await http.post(
+//       Uri.parse('$baseURL/api/verify-otp'),
+//       headers: {"Content-Type": "application/json"},
+//       body: jsonEncode({"email": email, "otp": otp}),
+//     );
+
+//     print("Server responded with status: ${response.statusCode}");
+
+//     final data = jsonDecode(response.body);
+//     print("Response body: $data");
+
+//     if (response.statusCode == 200) {
+//       final prefs = await SharedPreferences.getInstance();
+
+//       // Store user info
+//       await prefs.setString('token', data['token']);
+//       await prefs.setString('userid', data['userid'].toString());
+//       await prefs.setString('email', data['email']);
+//       print("Saved token and user info in SharedPreferences");
+
+//       if (data['eula_required'] == true) {
+//         print("EULA required for this user");
+//         final eula = data['eula'];
+//         print("Active EULA details: $eula");
+
+//         // Show EULA dialog
+//         final accepted = await showDialog<bool>(
+//           context: context,
+//           barrierDismissible: false,
+//           builder: (_) => EulaDialog(
+//             versionCode: eula['version_code'].toString(),
+//             content: eula['content'].toString(),
+//             versionId: eula['versionid'] is int
+//                  ? eula['versionid']
+//                  : int.tryParse(eula['versionid'].toString()) ?? 0,
+//             userId:data['userid'] is int
+//                  ? data['userid']
+//                  : int.tryParse(data['userid'].toString()) ?? 0,
+//             onAccept: (userId, versionId) async {
+//               // print("User accepting EULA: userId=$userId, versionId=$versionId");
+               
+//      final userId = await AuthService.getUserId();
+//      final token = await AuthService.getToken();
+//     //  debugPrint("userId retrieved: $userId");
+
+//       if (userId == null || token == null) {
+//         throw Exception("User not logged in");
+//       }
+             
+//               final resp = await http.post(
+//                 Uri.parse("$baseURL/api/eula-acceptance"),
+//                 headers: {
+//                   "Content-Type": "application/json",
+//                   "Authorization": "Bearer $token"
+//                           },
+//               );
+//               //   body: jsonEncode({
+//               //     "userid": userId,
+//               //     // "eula_version_id": versionId,
+//               //     "accepted_at": DateTime.now().toIso8601String(),
+//               //   }),
+//               // );
+//               print("EULA acceptance response status: ${resp.statusCode}");
+//               return resp.statusCode == 200 || resp.statusCode == 201;
+//             },
+//           ),
+//         );
+
+//         if (accepted != true) {
+//           print("User cancelled EULA dialog");
+//           return; // User cancelled - do not proceed
+//         }
+
+//         print("User accepted EULA");
+//       } else {
+//         print("No EULA required");
+//       }
+
+//       // Navigate to HomeScreen
+//       print("Navigating to HomeScreen");
+//       Navigator.pushReplacement(
+//         context,
+//         MaterialPageRoute(builder: (context) => const HomeScreen()),
+//       );
+//     } else {
+//       _showMessage(data["message"] ?? "Invalid OTP");
+//       print("OTP verification failed: ${data["message"]}");
+//     }
+//   } catch (e) {
+//     _showMessage("Server error");
+//     print("Error during OTP verification: $e");
+//   }
+
+//   setState(() => _isLoading = false);
+//   print("OTP verification finished, loading state set to false");
+// }
 
 
 
