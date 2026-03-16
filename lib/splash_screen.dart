@@ -45,16 +45,15 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.blue,
       body: Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // CircularProgressIndicator(),
-            Padding(
-              padding: const EdgeInsets.only(top: 50),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.amber,
-                ),
-                child: Text("Splash Screen")),
-            ),
+              Text("Secure Login System",
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              SizedBox(height: 10),
+              Text("Checking authentication...",
+              style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
           ],
         ),
       ),
