@@ -34,22 +34,38 @@ dependencies:
   shared_preferences: ^2.5.4
   http: ^1.6.0
   flutter_secure_storage: ^10.0.0
+  flutter_native_splash: ^2.4.7
+  flutter_launcher_icons: ^0.13.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
 
-# The following section is specific to Flutter packages.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/icon.png"
+  adaptive_icon_background: "#ffffff"  
+  adaptive_icon_foreground: "assets/images/icon.png"
+  min_sdk_android: 21
+
+# flutter_native_splash:
+#   color: "#ffffff"
+#   image: "assets/images/splash_blank.png"
+#   android: true
+#   ios: true
+
+# flutter_native_splash:
+#   color: "#ffffff"
+#   android: true
+#   ios: true
+#   android_12:
+#     color: "#ffffff"
+
+
+
 flutter:
 
   # The following line ensures that the Material Icons font is

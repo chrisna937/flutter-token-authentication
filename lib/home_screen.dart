@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart' hide SearchBar;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
-import 'package:http/http.dart' as http;
-import 'package:login_with_code_frontend/create_eula_screen.dart';
 import 'package:login_with_code_frontend/login_screen.dart';
-import 'package:login_with_code_frontend/profile_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:login_with_code_frontend/services/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,107 +13,78 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final FlutterSecureStorage storage = const FlutterSecureStorage();
   String searchText = "";
+  String authStatus = "Checking...";
 
   final String baseURL = 'http://192.168.100.77:3000';
 
   @override
   void initState() {
     super.initState();
+    _checkAuthStatus();
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _loadUser();
-  // }
+  Future<void> _checkAuthStatus() async {
+    final jwtAuth = await AuthService.getToken();
 
-  // Future<void> _loadUser() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final userId = prefs.getString('user_id');
-  //   print("Logged in user: $userId");
-  // }
-
-  Future<String?> getAuthenticationToken() async {
-    return await storage.read(key: 'jwt_auth');
+    setState(() {
+      authStatus = jwtAuth != null ? "Token Verified" : "Not Authenticated";
+    });
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
         title: const Text(
-          "AuthProfile with Eula",
+          "Secure Login",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfileScreen()),
-              );
-            },
-            child: CircleAvatar(backgroundImage: NetworkImage("")),
-          ),
-        ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) async {
-              switch (value) {
-                case 'settings':
-                  print("Settings tapped");
-                  break;
-                case 'eula':
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CreateEulaScreen()),
-                  );
-                  break;
-                case 'logout':
-                  final storage = FlutterSecureStorage();
-                  storage.delete(key: 'jwt_auth');
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsetsGeometry.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.verified_user, size: 80),
+              SizedBox(height: 20),
+              Text(
+                "Welcome!",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              Text("You are successfully logged in."),
 
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.remove('userid');
-                  await prefs.remove('email');
-                  await prefs.setBool('isLoggedIn', false);
+              const SizedBox(height: 30),
+
+              //Authentication Status Cards
+              Card(
+                elevation: 3,
+                child:  ListTile(
+                  leading: Icon(Icons.security),
+                  title: Text("Authentication Status"),
+                  subtitle: Text(authStatus),
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              //Logout button
+              ElevatedButton(
+                onPressed: () async {
+                  await AuthService.logout();
 
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (_) => const LoginScreen()),
                   );
-                  break;
-              }
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'settings',
-                child: Text('Settings'),
-              ),
-              const PopupMenuItem<String>(value: 'eula', child: Text('EULA')),
-              const PopupMenuItem<String>(
-                value: 'logout',
-                child: Text('Logout'),
+                },
+                child: const Text("Logout"),
               ),
             ],
           ),
-        ],
+        ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Center(child: Text("Home Screen")),
-          ),
-        ],
-      ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {},
-      //   child: const Icon(Icons.chat),
-      // ),
     );
   }
 }

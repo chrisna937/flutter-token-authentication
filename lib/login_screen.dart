@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:login_with_code_frontend/home_screen.dart';
-import 'package:login_with_code_frontend/services/auth_service.dart';
-import 'package:login_with_code_frontend/widgets/eula_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // final String baseURL =
   //     'https://link'; //cloud
-  final String baseURL = 'http://192.168.100.77:3000';
+  final String baseURL = 'http://192.168.100.77:3000'; //local
 
   Future<void> _sendOtp() async {
     final email = _emailController.text.trim();
@@ -63,8 +62,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
     final otp = _otpController.text.trim();
 
-    //  print("Starting OTP verification for email: $email, otp: $otp");
-
     if (otp.length != 6) {
       _showMessage("Enter valid 6-digit OTP");
       return;
@@ -80,25 +77,20 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       final data = jsonDecode(response.body);
-      print("Response: $data");
+      // print("Response body: ${response.body}");
+      // print("Decoded data: $data");
 
       if (response.statusCode == 200) {
+        const storage = FlutterSecureStorage();
+
+        //Store JWT securely
+        await storage.write(key: 'jwt_auth', value: data['token']);
+
+        //Store user info in SharedPreferences
         final prefs = await SharedPreferences.getInstance();
-       
-        // Store user info
-        await prefs.setString('token', data['token']);
         await prefs.setString('userid', data['userid'].toString());
         await prefs.setString('email', data['email']);
-        await prefs.setBool('isLoggedIn', true);
 
-        if (data['eula_required'] == true) {
-          final accepted = await _handleEulaAcceptance(data);
-
-          if (accepted != true) {
-            print("User did not accept EULA");
-            return;
-          }
-        }
 
         // Navigate to HomeScreen
         print("Navigating to HomeScreen");
@@ -115,53 +107,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = false);
-  }
-
-  Future<bool?> _handleEulaAcceptance(dynamic data) async {
-    final eula = data['eula'];
-
-    return await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => EulaDialog(
-        versionCode: eula['version_code'].toString(),
-        content: eula['content'].toString(),
-        //  versionId: eula['versionid'],
-        versionId: eula['versionid'] is int
-            ? eula['versionid']
-            : int.tryParse(eula['versionid'].toString()) ?? 0,
-        //  userId:data['userid'],
-        userId: data['userid'] is int
-            ? data['userid']
-            : int.tryParse(data['userid'].toString()) ?? 0,
-        onAccept: _acceptEula,
-      ),
-    );
-  }
-
-  Future<bool> _acceptEula(int userId, int versionId) async {
-    try {
-      final token = await AuthService.getToken();
-
-      final resp = await http.post(
-        Uri.parse("$baseURL/api/eula-acceptance"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode({
-          "userid": userId,
-          "eula_version_id": versionId,
-          "accepted_at": DateTime.now().toIso8601String(),
-        }),
-      );
-      print("EULA acceptance response: ${resp.statusCode}");
-
-      return resp.statusCode == 200 || resp.statusCode == 201;
-    } catch (e) {
-      print("EULA acceptance error: $e");
-      return false;
-    }
   }
 
   void _showMessage(
@@ -189,8 +134,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
+    // double screenHeight = MediaQuery.of(context).size.height;
+    // double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       body: Padding(
@@ -200,17 +145,11 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // const Icon(Icons.chat, size: 80, color: Colors.blue),
-                SizedBox(
-                  height: screenHeight * 0.15,
-                  width: double.infinity,
-                  // child: Image.asset(
-                  //   "assets/icon/chat_app_icon3.png",
-                  //   fit: BoxFit.contain, //fit: BoxFitScover,
-
-                  // ),
-                ),
-                const SizedBox(height: 16),
+                // SizedBox(
+                //   height: screenHeight * 0.15,
+                //   width: double.infinity,
+                // ),
+                // const SizedBox(height: 16),
 
                 const Text(
                   "Welcome Back",
@@ -218,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
 
                 TextField(
                   controller: _emailController,
@@ -243,8 +182,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 20),
                     ],
                   ),
-                const SizedBox(height: 24),
-
                 ElevatedButton(
                   onPressed: _isLoading
                       ? null
