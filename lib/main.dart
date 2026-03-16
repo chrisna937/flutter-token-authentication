@@ -2,8 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:login_with_code_frontend/home_screen.dart';
 import 'package:login_with_code_frontend/login_screen.dart';
+import 'package:login_with_code_frontend/services/auth_service.dart';
 import 'package:login_with_code_frontend/splash_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 
 
 void main() {
@@ -20,11 +21,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      // theme: ThemeData(
-        
-      //   colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      // ),
-      // home: LoginScreen(),
       home: SplashScreen(),
       
     );
@@ -33,11 +29,10 @@ class MyApp extends StatelessWidget {
 
 
 
-//Auto login without check in splash screen
+// //Auto login without check in splash screen
 // Future<bool> _checkLogin() async {
-//   final prefs = await SharedPreferences.getInstance();
-//   final token = prefs.getString('token');
-//   return token != null;
+//   final jwtAuth = await AuthService.getToken();
+//   return jwtAuth != null;
 // }
 
 
@@ -45,22 +40,17 @@ class MyApp extends StatelessWidget {
 //   Widget build(BuildContext context) {
 //     return MaterialApp(
 //       debugShowCheckedModeBanner: false,
-//       title: 'Flutter Demo',
-//       // theme: ThemeData(
-        
-//       //   colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-//       // ),
+//       // title: 'Flutter Demo',
 //       home: FutureBuilder(
 //         future: _checkLogin(),
 //           builder: (context, snapshot) {
 //           if (!snapshot.hasData) {
 //             return const Scaffold(
-//               body: Center(
-//                 child: CircularProgressIndicator(),
-//               ),
+//               // body: Center(
+//               //   child: CircularProgressIndicator(),
+//               // ),
 //             );
 //           }
-
 //           if (snapshot.data == true) {
 //             return const HomeScreen();
 //           } else {
