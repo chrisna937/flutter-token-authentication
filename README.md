@@ -60,8 +60,12 @@ Project Structure
 
 # How to Run the Project
 
-## 1. Clone the repository
- git clone https://github.com/chrisna937/flutter-token-authentication.git
+## 1. Clone the repository & the server
+Frontend
+git clone https://github.com/chrisna937/flutter-token-authentication.git
+
+Backend
+git@github.com:chrisna937/flutter-token-authentication-server.git
 
 ## 2. Install dependencies
 flutter pub get
