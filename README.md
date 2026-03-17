@@ -148,8 +148,10 @@ Make sure PostgreSQL is installed and running.
 
 ```sql
 CREATE SCHEMA YOUR_SCHEMA_NAME;
+
  2. Import Table Scripts
- Run the provided SQL file.
+ In flutter-token-authentication-server Run the provided SQL file located in .sql file.
+
 
 ## 7. Run the Backend Server
 npm run dev
