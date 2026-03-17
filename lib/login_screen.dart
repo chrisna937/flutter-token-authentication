@@ -28,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
 
     if (email.isEmpty) {
-      _showMessage("Please enter your email");
+      _showMessage("Please enter your email", isError: false);
       return;
     }
 
@@ -48,12 +48,12 @@ class _LoginScreenState extends State<LoginScreen> {
           _otpSent = true;
         });
 
-        _showMessage("OTP sent to your email");
+        _showMessage("OTP sent to your email", isError: false);
       } else {
-        _showMessage(data["message"] ?? "Failed to send OTP");
+        _showMessage(data["message"] ?? "Failed to send OTP", isError: true);
       }
     } catch (e) {
-      _showMessage("Server error");
+      _showMessage("Server error", isError: true);
     }
 
     setState(() => _isLoading = false);
@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final otp = _otpController.text.trim();
 
     if (otp.length != 6) {
-      _showMessage("Enter valid 6-digit OTP");
+      _showMessage("Enter valid 6-digit OTP", isError: true);
       return;
     }
 
@@ -100,21 +100,21 @@ class _LoginScreenState extends State<LoginScreen> {
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       } else {
-        _showMessage(data["message"] ?? "Invalid OTP");
+        _showMessage(data["message"] ?? "Invalid OTP", isError: true);
       }
     } catch (e) {
       print(e);
-      _showMessage("Server error");
+      _showMessage("Server error", isError: true);
     }
 
     setState(() => _isLoading = false);
   }
 
-  void _showMessage(
+ void _showMessage(
     String message, {
-    int durationSeconds = 7,
-    Color backgroundColor = Colors.green,
+    int durationSeconds = 6,
     Color textColor = Colors.white,
+    required bool isError,
   }) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -126,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
             style: TextStyle(color: textColor),
           ),
         ),
-        backgroundColor: backgroundColor,
+        backgroundColor: isError ? Colors.red : Colors.green[700],
         behavior: SnackBarBehavior.floating,
         duration: Duration(seconds: durationSeconds),
       ),
