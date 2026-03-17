@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:login_with_code_frontend/config/app_config.dart' as AppConfig;
 import 'package:login_with_code_frontend/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // final String baseURL =
   //     'https://link'; //cloud
-  final String baseURL = 'http://192.168.100.77:3000'; //local
+  final String baseURL = AppConfig.baseURL;
 
   Future<void> _sendOtp() async {
     final email = _emailController.text.trim();
