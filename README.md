@@ -65,7 +65,7 @@ Frontend
 git clone https://github.com/chrisna937/flutter-token-authentication.git
 
 Backend
-git@github.com:chrisna937/flutter-token-authentication-server.git
+git clone https://github.com/chrisna937/flutter-token-authentication-server.git
 
 ## 2. Install dependencies
 flutter pub get
