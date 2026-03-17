@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart' hide SearchBar;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:login_with_code_frontend/config/app_config.dart' as AppConfig;
 import 'package:login_with_code_frontend/login_screen.dart';
 import 'package:login_with_code_frontend/services/auth_service.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String searchText = "";
   String authStatus = "Checking...";
 
-  final String baseURL = 'http://192.168.100.77:3000';
+  final String baseURL = AppConfig.baseURL;
 
   @override
   void initState() {

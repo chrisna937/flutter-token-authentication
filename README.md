@@ -1,6 +1,6 @@
 Secure Login System with JWT Authentication
 
-A simple authentication system built with FLutter that demonstrates secure login using JWT tokens, OTP verification, and session handling.
+A simple authentication system built with Flutter that demonstrates secure login using JWT tokens, OTP verification, and session handling.
 
 This project showcases how modern mobile apps handle authentication, token storage, and user session management.
 
@@ -8,7 +8,7 @@ Features
  - User login authentication
  - JWT token-based authentication
  - OTP verification flow
- - Secure toen storage using FlutterSecureStorage
+ - Secure token storage using FlutterSecureStorage
  - Persistent login session
  - Automatic login using splash screen
  - Logout functionality
