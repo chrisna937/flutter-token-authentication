@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:login_with_code_frontend/config/app_config.dart' as AppConfig;
 import 'package:login_with_code_frontend/home_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:login_with_code_frontend/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -77,30 +76,25 @@ class _LoginScreenState extends State<LoginScreen> {
         body: jsonEncode({"email": email, "otp": otp}),
       );
 
-      final data = jsonDecode(response.body);
-      // print("Response body: ${response.body}");
-      // print("Decoded data: $data");
-
       if (response.statusCode == 200) {
-        const storage = FlutterSecureStorage();
+        final data = jsonDecode(response.body);
+        // print("Response body: ${response.body}");
+        // print("Decoded data: $data");
+        final token = data['token'];
+        final userId = data['userid'];
+        final email = data['email'];
 
-        //Store JWT securely
-        await storage.write(key: 'jwt_auth', value: data['token']);
+        await AuthService.saveToken(data['token']);
 
-        //Store user info in SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('userid', data['userid'].toString());
-        await prefs.setString('email', data['email']);
+        await AuthService.saveUserInfo(userId: userId.toString(), email: email);
 
-
-        // Navigate to HomeScreen
         // print("Navigating to HomeScreen");
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       } else {
-        _showMessage(data["message"] ?? "Invalid OTP", isError: true);
+        _showMessage("Invalid OTP", isError: true);
       }
     } catch (e) {
       print(e);
@@ -110,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
   }
 
- void _showMessage(
+  void _showMessage(
     String message, {
     int durationSeconds = 6,
     Color textColor = Colors.white,
@@ -151,7 +145,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 //   width: double.infinity,
                 // ),
                 // const SizedBox(height: 16),
-
                 const Text(
                   "Welcome Back",
                   textAlign: TextAlign.center,
